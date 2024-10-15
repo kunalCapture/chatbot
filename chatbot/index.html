@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #e0eafc, #cfdef3);
+        }
+
+        /* Chatbot icon style */
+        .chatbot-icon {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 50%;
+            padding: 15px;
+            font-size: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        .chatbot-icon:hover {
+            background-color: #0056b3;
+            transform: scale(1.1);
+        }
+
+        /* Chat container */
+        .chat-container {
+            display: none;
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            width: 400px;
+            height: 500px;
+            flex-direction: column;
+            overflow: hidden;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .chat-header {
+            background-color: #007bff;
+            color: white;
+            padding: 15px;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .close-chat {
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .chat-box {
+            padding: 10px;
+            overflow-y: auto;
+            flex-grow: 1;
+            border: none;
+            background-color: #f7f9fc;
+            border-bottom: 1px solid #ddd;
+            border-top: none;
+        }
+
+        .user-input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            width: 100%;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+            border-top: none;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+            font-size: 16px;
+        }
+
+        .message {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            max-width: 80%;
+            word-wrap: break-word;
+            position: relative;
+            clear: both;
+            display: block;
+        }
+
+        .message.user {
+            background-color: #d1f4ff;
+            float: right;
+            text-align: right;
+            margin-left: auto;
+            margin-right: 10px;
+            box-shadow: 0 2px 5px rgba(0, 123, 255, 0.2);
+        }
+
+        .message.bot {
+            background-color: #e8e8e8;
+            float: left;
+            text-align: left;
+            margin-right: auto;
+            margin-left: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .message.bot a {
+            color: #007bff;
+            text-decoration: underline;
+        }
+
+        .message.bot img {
+            vertical-align: middle;
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+        }
+
+        .message.bot::after {
+            content: '';
+            position: absolute;
+            left: -10px;
+            top: 15px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid #e8e8e8;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+
+        .message.user::after {
+            content: '';
+            position: absolute;
+            right: -10px;
+            top: 15px;
+            width: 0;
+            height: 0;
+            border-right: 10px solid #d1f4ff;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+
+        .typing {
+            font-style: italic;
+            color: #aaa;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Chatbot Icon -->
+    <div class="chatbot-icon" id="chatbot-icon">💬</div>
+
+    <!-- Chat Container -->
+    <div class="chat-container" id="chat-container">
+        <div class="chat-header">
+            Capture Admissions Counseler AI
+            <span class="close-chat" id="close-chat">✖</span>
+        </div>
+        <div class="chat-box" id="chat-box"></div>
+        <input type="text" id="user-input" class="user-input" placeholder="Type a message..." onkeypress="handleInput(event)">
+    </div>
+
+    <audio id="chat-open-sound" src="sounds/chat-open.mp3" preload="auto"></audio>
+
+    <script>
+        const sessionId = Math.random().toString(36).substr(2, 9);
+        const chatbotIcon = document.getElementById('chatbot-icon');
+        const chatContainer = document.getElementById('chat-container');
+        const closeChat = document.getElementById('close-chat');
+        const chatOpenSound = document.getElementById('chat-open-sound');
+        const chatBox = document.getElementById('chat-box');
+
+        chatbotIcon.addEventListener('click', () => {
+            chatContainer.style.display = 'flex';  // Show chat window
+            chatbotIcon.style.display = 'none';    // Hide chat icon
+            document.getElementById('user-input').focus(); // Focus on the input
+            chatOpenSound.play(); // Play sound when chat opens
+        });
+
+        closeChat.addEventListener('click', () => {
+            chatContainer.style.display = 'none';  // Hide chat window
+            chatbotIcon.style.display = 'block';   // Show chat icon
+        });
+
+        // Function to handle user input and fetch bot response
+        async function handleInput(event) {
+            if (event.key === 'Enter') {
+                const input = document.getElementById('user-input').value.trim();
+                document.getElementById('user-input').value = '';  // Clear input field
+
+                if (input === '') return;  // Ignore empty messages
+
+                // Add user message to the chat
+                addMessage(input, 'user');
+
+                // Fetch bot response from the backend
+                const { response } = await fetchBotResponse(input);  // Get response
+                await displayTypingEffect(response, 'bot');  // Show the bot typing effect with words
+            }
+        }
+
+        // Function to fetch bot response from backend (OpenAI API)
+        async function fetchBotResponse(input) {
+            try {
+                const response = await fetch('http://localhost:3000/get-response', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: input, sessionId }),
+                });
+
+                const data = await response.json();
+                return { response: data.response };  // Return the AI's response
+            } catch (error) {
+                console.error('Error fetching bot response:', error);
+                return { response: 'Sorry, there was an error processing your request.' };
+            }
+        }
+
+        // Function to display typing effect for bot response
+        async function displayTypingEffect(text, sender) {
+            const messageBox = document.createElement('div');
+            messageBox.classList.add('message', sender);
+            chatBox.appendChild(messageBox);
+            chatBox.scrollTop = chatBox.scrollHeight;  // Auto-scroll to the latest message
+
+            // Clear previous content in case of reuse
+            messageBox.textContent = '';
+
+            // Split the text into words and display them one by one
+            const words = text.split(' ');
+            for (let i = 0; i < words.length; i++) {
+                messageBox.textContent += words[i] + ' ';
+                chatBox.scrollTop = chatBox.scrollHeight;  // Scroll to the latest word
+                await new Promise(resolve => setTimeout(resolve, 150));  // Delay between words (adjust as needed)
+            }
+        }
+
+        // Function to display user and bot messages in the chatbox
+        function addMessage(text, sender) {
+            const messageBox = document.createElement('div');
+            messageBox.classList.add('message', sender);
+
+            // Check if the message contains a URL and convert it to a clickable link
+            const formattedText = formatLinks(text);
+            messageBox.innerHTML = formattedText; // Use innerHTML to support links
+
+            chatBox.appendChild(messageBox);
+            chatBox.scrollTop = chatBox.scrollHeight;  // Auto-scroll to the latest message
+        }
+
+        // Function to format links in text
+        function formatLinks(text) {
+            const urlPattern = /(https?:\/\/[^\s]+)/g;
+            return text.replace(urlPattern, '<a href="$1" target="_blank">$1</a>');
+        }
+    </script>
+
+</body>
+
+</html>
