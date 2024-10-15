@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "Capture AI Admissions Counselor",
+  "version": "1.0",
+  "description": "Adds a chatbot to any website you visit.",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "16": "capture16.png",
+    "48": "capture48.png",
+    "128": "capture128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ]
+}
